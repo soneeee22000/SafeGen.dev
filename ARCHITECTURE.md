@@ -1,5 +1,62 @@
 # SafeGen — Architecture
 
+## System Overview
+
+[![Architecture Diagram](https://img.shields.io/badge/View%20Interactive%20Diagram-Excalidraw-6965db?style=flat-square&logo=excalidraw)](https://excalidraw.com/#json=AYeGdzU2odcXQHa4tp_DM,rXcDX6ii-NgvHYrm16a_Rg)
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend (React 19 + TypeScript)"]
+        Dashboard[Dashboard]
+        Playground[Playground]
+        AuditUI[Audit Log]
+        RulesUI[Rules Mgmt]
+    end
+
+    Client[Client App]
+
+    subgraph API["Azure Functions (Python 3.10)"]
+        Validate["POST /validate"]
+        Ingest["POST /rules/ingest"]
+        Rules["GET /rules"]
+        Audit["GET /audit"]
+        Metrics["GET /metrics"]
+    end
+
+    subgraph Core["Core Business Logic (zero Azure imports)"]
+        OpenAI[OpenAI Client]
+        Engine["Compliance Engine<br/>PII · Bias · Safety · Rules"]
+        RAG[RAG Pipeline]
+        Logger[Audit Logger]
+    end
+
+    subgraph External["External Services"]
+        GPT["Azure OpenAI<br/>GPT-4o"]
+        FAISS["FAISS Index<br/>(embeddings)"]
+        HF["HuggingFace<br/>all-MiniLM-L6-v2"]
+        Blob["Azure Blob<br/>Storage"]
+    end
+
+    Frontend -->|HTTP| API
+    Client -->|POST /validate| Validate
+    Validate --> OpenAI
+    Validate --> Engine
+    Ingest --> RAG
+    Audit --> Logger
+    Metrics --> Logger
+    Rules --> RAG
+    OpenAI --> GPT
+    Engine -->|validate| RAG
+    RAG --> FAISS
+    RAG --> HF
+    Logger --> Blob
+
+    style Frontend fill:#dbe4ff,stroke:#4a9eed
+    style API fill:#e5dbff,stroke:#8b5cf6
+    style Core fill:#d3f9d8,stroke:#22c55e
+    style External fill:#ffd8a8,stroke:#f59e0b
+```
+
 ## System Design
 
 SafeGen is a **serverless middleware** that sits between client applications and Azure OpenAI. It uses a multi-layer compliance engine with RAG-based policy retrieval to validate LLM outputs against dynamically loaded rule documents.
@@ -68,10 +125,11 @@ safegen/
 │       │   ├── ui/                  #   10 shadcn components
 │       │   ├── layout/             #   Sidebar + Header + AppLayout
 │       │   ├── dashboard/          #   KpiCard, TrendChart, FlagBreakdownChart, ScoreGauge
+│       │   ├── playground/         #   PromptInput, ResultPanel, FlagList, ExamplePrompts
 │       │   ├── audit/              #   AuditFilters, AuditTable, AuditPagination, AuditDetailModal
 │       │   └── rules/              #   RuleUploader (drag-and-drop), RuleList
-│       ├── pages/                   # DashboardPage, AuditPage, RulesPage
-│       └── test/                    # 41 tests (setup, mocks, component/page/service tests)
+│       ├── pages/                   # DashboardPage, PlaygroundPage, AuditPage, RulesPage
+│       └── test/                    # 53 tests (setup, mocks, component/page/service tests)
 │
 ├── rules/                           # Sample compliance documents
 │   ├── gdpr_content_rules.md
@@ -80,7 +138,7 @@ safegen/
 │
 ├── ARCHITECTURE.md
 ├── BUILDPLAN.md
-├── CLAUDE.md
+├── ROADMAP.md
 └── README.md
 ```
 
@@ -115,10 +173,11 @@ safegen/
 ### Dashboard Data Flow
 
 ```
-DashboardPage → GET /api/metrics → audit store → O(n) aggregation → KPIs + charts
-AuditPage     → GET /api/audit   → audit store → paginated records → table + modal
-RulesPage     → GET /api/rules   → FAISS index metadata → rule cards
-              → POST /api/rules/ingest → file upload → chunk + embed → FAISS
+DashboardPage   → GET /api/metrics     → audit store → O(n) aggregation → KPIs + charts
+PlaygroundPage  → POST /api/validate   → OpenAI + compliance engine → live results
+AuditPage       → GET /api/audit       → audit store → paginated records → table + modal
+RulesPage       → GET /api/rules       → FAISS index metadata → rule cards
+                → POST /api/rules/ingest → file upload → chunk + embed → FAISS
 ```
 
 ## Key Technical Decisions

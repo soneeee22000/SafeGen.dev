@@ -45,3 +45,6 @@ frontend/.vite/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Claude Code
+CLAUDE.md

@@ -18,39 +18,59 @@ SafeGen is a serverless pipeline that sits between your application and Azure Op
 
 ## Architecture
 
-```
-                    ┌─────────────────────────────────────┐
-                    │           React Dashboard                │
-                    │  Playground │ Metrics │ Audit │ Rules  │
-                    └─────┬─────┴──────┬──────┴─────┬──────┘
-                          │            │            │
-                       GET /metrics  GET /audit  GET /rules
-                          │            │     POST /rules/ingest
-┌──────────┐              │            │            │
-│  Client  │──POST /validate──┐       │            │
-│   App    │              │   │       │            │
-└──────────┘              │   ▼       ▼            ▼
-                    ┌─────┴────────────────────────────────┐
-                    │     Azure Functions (Python 3.10)     │
-                    │                                       │
-                    │  ┌─────────────┐  ┌───────────────┐  │
-                    │  │ OpenAI      │  │ Compliance     │  │
-                    │  │ Client      │  │ Engine         │  │
-                    │  │             │  │  ├─ PII        │  │
-                    │  │ GPT-4o ◄───┤  │  ├─ Bias       │  │
-                    │  │             │  │  ├─ Safety     │  │
-                    │  └─────────────┘  │  └─ Rules(RAG) │  │
-                    │                   └───────┬───────┘  │
-                    │  ┌──────────┐  ┌──────────┴───────┐  │
-                    │  │ Audit    │  │ FAISS Index       │  │
-                    │  │ Logger   │  │ (rule embeddings) │  │
-                    │  └────┬─────┘  └──────────────────┘  │
-                    └───────┼──────────────────────────────┘
-                            ▼
-                    ┌───────────────┐
-                    │ Azure Blob    │
-                    │ Storage       │
-                    └───────────────┘
+[![Architecture Diagram](https://img.shields.io/badge/View%20Interactive%20Diagram-Excalidraw-6965db?style=flat-square&logo=excalidraw)](https://excalidraw.com/#json=AYeGdzU2odcXQHa4tp_DM,rXcDX6ii-NgvHYrm16a_Rg)
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend (React 19 + TypeScript)"]
+        Dashboard[Dashboard]
+        Playground[Playground]
+        AuditUI[Audit Log]
+        RulesUI[Rules Mgmt]
+    end
+
+    Client[Client App]
+
+    subgraph API["Azure Functions (Python 3.10)"]
+        Validate["POST /validate"]
+        Ingest["POST /rules/ingest"]
+        Rules["GET /rules"]
+        Audit["GET /audit"]
+        Metrics["GET /metrics"]
+    end
+
+    subgraph Core["Core Business Logic (zero Azure imports)"]
+        OpenAI[OpenAI Client]
+        Engine["Compliance Engine<br/>PII · Bias · Safety · Rules"]
+        RAG[RAG Pipeline]
+        Logger[Audit Logger]
+    end
+
+    subgraph External["External Services"]
+        GPT["Azure OpenAI<br/>GPT-4o"]
+        FAISS["FAISS Index<br/>(embeddings)"]
+        HF["HuggingFace<br/>all-MiniLM-L6-v2"]
+        Blob["Azure Blob<br/>Storage"]
+    end
+
+    Frontend -->|HTTP| API
+    Client -->|POST /validate| Validate
+    Validate --> OpenAI
+    Validate --> Engine
+    Ingest --> RAG
+    Audit --> Logger
+    Metrics --> Logger
+    Rules --> RAG
+    OpenAI --> GPT
+    Engine -->|validate| RAG
+    RAG --> FAISS
+    RAG --> HF
+    Logger --> Blob
+
+    style Frontend fill:#dbe4ff,stroke:#4a9eed
+    style API fill:#e5dbff,stroke:#8b5cf6
+    style Core fill:#d3f9d8,stroke:#22c55e
+    style External fill:#ffd8a8,stroke:#f59e0b
 ```
 
 ## Tech Stack
