@@ -82,9 +82,7 @@ class TestComplianceEngineValidate:
         """More violations produce a lower compliance score."""
         engine = ComplianceEngine()
         clean_result = engine.validate("A helpful response about best practices.")
-        dirty_result = engine.validate(
-            "Email john@company.com, SSN 123-45-6789. The chairman is a fireman."
-        )
+        dirty_result = engine.validate("Email john@company.com, SSN 123-45-6789. The chairman is a fireman.")
         assert clean_result.score > dirty_result.score
 
     def test_empty_text_passes(self) -> None:

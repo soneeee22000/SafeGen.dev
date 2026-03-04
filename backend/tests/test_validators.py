@@ -151,9 +151,7 @@ class TestBiasChecker:
 
     def test_neutral_text_returns_no_flags(self) -> None:
         """Neutral, inclusive text returns zero flags."""
-        flags = self.checker.validate(
-            "The team lead presented the quarterly results to stakeholders."
-        )
+        flags = self.checker.validate("The team lead presented the quarterly results to stakeholders.")
         assert flags == []
 
     def test_severity_is_warning_not_critical(self) -> None:
@@ -202,9 +200,7 @@ class TestSafetyFilter:
 
     def test_safe_text_returns_no_flags(self) -> None:
         """Safe, helpful text returns zero flags."""
-        flags = self.filter.validate(
-            "Regular exercise and a balanced diet contribute to overall health."
-        )
+        flags = self.filter.validate("Regular exercise and a balanced diet contribute to overall health.")
         assert flags == []
 
     def test_safety_flags_are_critical(self) -> None:

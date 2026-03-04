@@ -128,10 +128,12 @@ class TestValidateEndpoint:
         validate_module._openai_client = mock_client
         validate_module._compliance_engine = None
 
-        req = self._make_request({
-            "prompt": "Summarize this",
-            "context": "Document about GDPR compliance.",
-        })
+        req = self._make_request(
+            {
+                "prompt": "Summarize this",
+                "context": "Document about GDPR compliance.",
+            }
+        )
         resp = validate(req)
 
         assert resp.status_code == 200
@@ -143,9 +145,7 @@ class TestValidateEndpoint:
         validate_module._openai_client = None
         validate_module._compliance_engine = None
 
-    def test_response_includes_usage_stats(
-        self, mock_env: None, sample_generation_result: GenerationResult
-    ) -> None:
+    def test_response_includes_usage_stats(self, mock_env: None, sample_generation_result: GenerationResult) -> None:
         """Response includes token usage statistics."""
         import functions.validate as validate_module
         from functions.validate import validate
@@ -192,6 +192,56 @@ class TestValidateEndpoint:
 
         validate_module._openai_client = None
         validate_module._compliance_engine = None
+
+    def test_audit_record_saved_on_success(self, mock_env: None, sample_generation_result: GenerationResult) -> None:
+        """Successful validation saves an audit record."""
+        import functions.validate as validate_module
+        from functions.validate import validate
+
+        mock_client = MagicMock()
+        mock_client.generate.return_value = sample_generation_result
+        validate_module._openai_client = mock_client
+        validate_module._compliance_engine = None
+
+        mock_store = MagicMock()
+        validate_module._audit_store = mock_store
+
+        req = self._make_request({"prompt": "What is GDPR?"})
+        resp = validate(req)
+
+        assert resp.status_code == 200
+        mock_store.save.assert_called_once()
+        saved_record = mock_store.save.call_args[0][0]
+        assert saved_record.prompt == "What is GDPR?"
+        assert saved_record.compliance_passed is True
+
+        validate_module._openai_client = None
+        validate_module._compliance_engine = None
+        validate_module._audit_store = None
+
+    def test_audit_failure_is_non_fatal(self, mock_env: None, sample_generation_result: GenerationResult) -> None:
+        """Audit store failure does not break the response."""
+        import functions.validate as validate_module
+        from functions.validate import validate
+
+        mock_client = MagicMock()
+        mock_client.generate.return_value = sample_generation_result
+        validate_module._openai_client = mock_client
+        validate_module._compliance_engine = None
+
+        mock_store = MagicMock()
+        mock_store.save.side_effect = Exception("disk full")
+        validate_module._audit_store = mock_store
+
+        req = self._make_request({"prompt": "test"})
+        resp = validate(req)
+
+        # Should still return 200 despite audit failure
+        assert resp.status_code == 200
+
+        validate_module._openai_client = None
+        validate_module._compliance_engine = None
+        validate_module._audit_store = None
 
     def test_compliance_respects_rules_category(self, mock_env: None) -> None:
         """rules_category=pii only runs PII validator, not bias."""

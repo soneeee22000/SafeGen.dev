@@ -93,9 +93,7 @@ class AzureOpenAIClient:
         ]
 
         if context:
-            messages.append(
-                {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"}
-            )
+            messages.append({"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"})
         else:
             messages.append({"role": "user", "content": prompt})
 
@@ -113,11 +111,15 @@ class AzureOpenAIClient:
         )
 
         choice = response.choices[0]
-        usage = {
-            "prompt_tokens": response.usage.prompt_tokens,
-            "completion_tokens": response.usage.completion_tokens,
-            "total_tokens": response.usage.total_tokens,
-        } if response.usage else {}
+        usage = (
+            {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens,
+            }
+            if response.usage
+            else {}
+        )
 
         logger.info(
             "Azure OpenAI response: model=%s, tokens=%s, finish_reason=%s",

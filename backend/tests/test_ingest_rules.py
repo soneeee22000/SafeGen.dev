@@ -29,10 +29,12 @@ class TestIngestRulesEndpoint:
             module.FAISS_INDEX_DIR = tmpdir
             module._faiss_index = None
 
-            req = self._make_json_request({
-                "content": "AI must not generate biased content. All outputs must be reviewed for fairness and accuracy.",
-                "filename": "bias_rules.md",
-            })
+            req = self._make_json_request(
+                {
+                    "content": "AI must not generate biased content. All outputs must be reviewed for fairness and accuracy.",
+                    "filename": "bias_rules.md",
+                }
+            )
 
             resp = module.ingest_rules(req)
             assert resp.status_code == 201
@@ -83,18 +85,22 @@ class TestIngestRulesEndpoint:
             module._faiss_index = None
 
             # First rule
-            req1 = self._make_json_request({
-                "content": "GDPR requires data minimization and purpose limitation.",
-                "filename": "gdpr.md",
-            })
+            req1 = self._make_json_request(
+                {
+                    "content": "GDPR requires data minimization and purpose limitation.",
+                    "filename": "gdpr.md",
+                }
+            )
             resp1 = module.ingest_rules(req1)
             data1 = json.loads(resp1.get_body())
 
             # Second rule
-            req2 = self._make_json_request({
-                "content": "PII must be masked in all AI outputs including emails and phone numbers.",
-                "filename": "pii.md",
-            })
+            req2 = self._make_json_request(
+                {
+                    "content": "PII must be masked in all AI outputs including emails and phone numbers.",
+                    "filename": "pii.md",
+                }
+            )
             resp2 = module.ingest_rules(req2)
             data2 = json.loads(resp2.get_body())
 

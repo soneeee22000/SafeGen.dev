@@ -64,7 +64,9 @@ def ingest_rules(req: func.HttpRequest) -> func.HttpResponse:
         file = req.files.get("file")
         if file is None:
             return func.HttpResponse(
-                body=json.dumps({"error": "missing_file", "message": "No file provided. Upload a file with field name 'file'."}),
+                body=json.dumps(
+                    {"error": "missing_file", "message": "No file provided. Upload a file with field name 'file'."}
+                ),
                 status_code=400,
                 mimetype="application/json",
             )

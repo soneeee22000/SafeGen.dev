@@ -153,9 +153,7 @@ class TestGenerateEmbeddings:
 class TestFAISSIndex:
     """Tests for FAISS vector index operations."""
 
-    def _make_chunks_and_embeddings(
-        self, n: int = 5, dim: int = 384
-    ) -> tuple[list[DocumentChunk], np.ndarray]:
+    def _make_chunks_and_embeddings(self, n: int = 5, dim: int = 384) -> tuple[list[DocumentChunk], np.ndarray]:
         """Create test chunks and random embeddings."""
         chunks = [
             DocumentChunk(
@@ -243,8 +241,12 @@ class TestFAISSIndex:
     def test_search_with_real_embeddings(self) -> None:
         """End-to-end: embed text, index, search, get relevant result."""
         chunks = [
-            DocumentChunk(content="GDPR requires explicit consent for data processing", chunk_index=0, source_file="gdpr.md"),
-            DocumentChunk(content="Bias in AI systems must be actively monitored", chunk_index=1, source_file="bias.md"),
+            DocumentChunk(
+                content="GDPR requires explicit consent for data processing", chunk_index=0, source_file="gdpr.md"
+            ),
+            DocumentChunk(
+                content="Bias in AI systems must be actively monitored", chunk_index=1, source_file="bias.md"
+            ),
             DocumentChunk(content="PII like email addresses must be masked", chunk_index=2, source_file="pii.md"),
         ]
         texts = [c.content for c in chunks]

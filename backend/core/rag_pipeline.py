@@ -301,9 +301,7 @@ class FAISSIndex:
             ValueError: If chunks and embeddings lengths don't match.
         """
         if len(chunks) != embeddings.shape[0]:
-            raise ValueError(
-                f"Chunks ({len(chunks)}) and embeddings ({embeddings.shape[0]}) must have same length"
-            )
+            raise ValueError(f"Chunks ({len(chunks)}) and embeddings ({embeddings.shape[0]}) must have same length")
 
         # Normalize for cosine similarity
         faiss.normalize_L2(embeddings)
@@ -352,7 +350,9 @@ class FAISSIndex:
                 )
             )
 
-        logger.info("FAISS search returned %d results (top score: %.4f)", len(results), results[0].score if results else 0.0)
+        logger.info(
+            "FAISS search returned %d results (top score: %.4f)", len(results), results[0].score if results else 0.0
+        )
         return results
 
     def save(self, directory: str) -> None:

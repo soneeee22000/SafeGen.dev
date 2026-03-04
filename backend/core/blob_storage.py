@@ -39,17 +39,12 @@ class BlobStorageClient:
         Args:
             connection_string: Azure Storage connection string. Falls back to env var.
         """
-        self._connection_string = connection_string or os.environ.get(
-            "AZURE_STORAGE_CONNECTION_STRING", ""
-        )
+        self._connection_string = connection_string or os.environ.get("AZURE_STORAGE_CONNECTION_STRING", "")
         if not self._connection_string:
             raise ValueError(
-                "Azure Storage connection string is required. "
-                "Set AZURE_STORAGE_CONNECTION_STRING environment variable."
+                "Azure Storage connection string is required. Set AZURE_STORAGE_CONNECTION_STRING environment variable."
             )
-        self._service_client = BlobServiceClient.from_connection_string(
-            self._connection_string
-        )
+        self._service_client = BlobServiceClient.from_connection_string(self._connection_string)
 
     def _ensure_container(self, container_name: str) -> None:
         """Create the container if it does not exist.
@@ -83,9 +78,7 @@ class BlobStorageClient:
             BlobMetadata with upload details.
         """
         self._ensure_container(container_name)
-        blob_client = self._service_client.get_blob_client(
-            container=container_name, blob=blob_name
-        )
+        blob_client = self._service_client.get_blob_client(container=container_name, blob=blob_name)
 
         content_settings = ContentSettings(content_type=content_type)
         blob_client.upload_blob(
@@ -116,9 +109,7 @@ class BlobStorageClient:
         Returns:
             Raw bytes of the blob content.
         """
-        blob_client = self._service_client.get_blob_client(
-            container=container_name, blob=blob_name
-        )
+        blob_client = self._service_client.get_blob_client(container=container_name, blob=blob_name)
         downloader = blob_client.download_blob()
         data = downloader.readall()
         logger.info("Downloaded blob: %s/%s (%d bytes)", container_name, blob_name, len(data))
@@ -164,8 +155,6 @@ class BlobStorageClient:
             container_name: Container name.
             blob_name: Blob name.
         """
-        blob_client = self._service_client.get_blob_client(
-            container=container_name, blob=blob_name
-        )
+        blob_client = self._service_client.get_blob_client(container=container_name, blob=blob_name)
         blob_client.delete_blob()
         logger.info("Deleted blob: %s/%s", container_name, blob_name)
