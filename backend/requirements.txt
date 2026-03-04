@@ -1,3 +1,6 @@
+# Use CPU-only PyTorch index to avoid 900MB+ GPU build
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 # Azure Functions runtime
 azure-functions>=1.17.0
 
@@ -11,6 +14,7 @@ azure-storage-blob>=12.19.0
 faiss-cpu>=1.7.4
 sentence-transformers>=2.5.0,<3.0.0
 transformers>=4.38.0,<5.0.0
+torch
 
 # Document extraction (Phase 2)
 PyMuPDF>=1.23.0
@@ -21,7 +25,3 @@ pydantic>=2.6.0
 
 # Utilities
 python-dotenv>=1.0.0
-
-# Testing
-pytest>=8.0.0
-pytest-asyncio>=0.23.0
