@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.python_packages/
+
+# Azure Functions
+local.settings.json
+__azurite_db*__.json
+bin/
+obj/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# FAISS index (generated)
+*.faiss
+faiss_index/
+
+# Node (frontend)
+node_modules/
+frontend/dist/
+
+# Docker
+.docker/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
