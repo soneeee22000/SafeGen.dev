@@ -13,13 +13,18 @@ import type {
 
 /** Custom error class with status code and optional details. */
 export class ApiError extends Error {
+  readonly status: number;
+  readonly details?: Record<string, unknown>;
+
   constructor(
-    public readonly status: number,
+    status: number,
     message: string,
-    public readonly details?: Record<string, unknown>,
+    details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ApiError";
+    this.status = status;
+    this.details = details;
   }
 }
 

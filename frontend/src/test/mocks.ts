@@ -9,6 +9,7 @@ import type {
   MetricsResponse,
   RuleDocument,
   TimeSeriesPoint,
+  ValidateResponse,
 } from "@/types";
 
 export function createAuditRecord(
@@ -114,6 +115,23 @@ export function createRuleDocument(
   return {
     filename: "gdpr_content_rules.md",
     chunk_count: 5,
+    ...overrides,
+  };
+}
+
+export function createValidateResponse(
+  overrides: Partial<ValidateResponse> = {},
+): ValidateResponse {
+  return {
+    response:
+      "Renewable energy offers many benefits for sustainable development.",
+    model: "gpt-4o",
+    compliance: {
+      passed: true,
+      score: 1.0,
+      flags: [],
+      layers_run: ["pii", "bias", "safety"],
+    },
     ...overrides,
   };
 }
