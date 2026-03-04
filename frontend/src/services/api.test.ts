@@ -73,7 +73,7 @@ describe("API client", () => {
     it("fetches rules list", async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve([]),
+        json: () => Promise.resolve({ rules: [] }),
       } as Response);
 
       const result = await fetchRules();

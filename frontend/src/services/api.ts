@@ -76,8 +76,9 @@ export function fetchAuditRecords(options: {
 }
 
 /** Fetch list of ingested rules. */
-export function fetchRules(): Promise<RuleDocument[]> {
-  return apiFetch<RuleDocument[]>("/api/rules");
+export async function fetchRules(): Promise<RuleDocument[]> {
+  const data = await apiFetch<{ rules: RuleDocument[] }>("/api/rules");
+  return data.rules;
 }
 
 /** Upload a rule document for ingestion. */
