@@ -1,7 +1,8 @@
 """POST /api/validate — Main compliance validation endpoint.
 
-Phase 1: Proxies prompt to Azure OpenAI and returns the response.
-Phase 3: Adds compliance engine validation before returning.
+Proxies prompt to Azure OpenAI, then runs the compliance engine
+against the LLM response. Returns the response with compliance
+validation results (score, flags, pass/fail).
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ import logging
 import azure.functions as func
 from pydantic import ValidationError
 
+from core.compliance_engine import ComplianceEngine
 from core.models import ErrorResponse, ValidateRequest, ValidateResponse
 from core.openai_client import AzureOpenAIClient
 
@@ -18,8 +20,9 @@ logger = logging.getLogger(__name__)
 
 bp = func.Blueprint()
 
-# Lazy-initialized client (cold start optimization)
+# Lazy-initialized singletons (cold start optimization)
 _openai_client: AzureOpenAIClient | None = None
+_compliance_engine: ComplianceEngine | None = None
 
 
 def _get_openai_client() -> AzureOpenAIClient:
@@ -28,6 +31,14 @@ def _get_openai_client() -> AzureOpenAIClient:
     if _openai_client is None:
         _openai_client = AzureOpenAIClient()
     return _openai_client
+
+
+def _get_compliance_engine() -> ComplianceEngine:
+    """Get or create the compliance engine singleton."""
+    global _compliance_engine
+    if _compliance_engine is None:
+        _compliance_engine = ComplianceEngine()
+    return _compliance_engine
 
 
 @bp.route(route="api/validate", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.ANONYMOUS)
@@ -93,17 +104,27 @@ def validate(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json",
         )
 
-    # Phase 1: Return raw response without compliance validation
-    # Phase 3 will add: compliance_result = compliance_engine.validate(result.content)
+    # Run compliance engine against LLM response
+    engine = _get_compliance_engine()
+    compliance_result = engine.validate(
+        text=result.content,
+        rules_category=request.rules_category,
+    )
+
     response = ValidateResponse(
         response=result.content,
-        raw_response=None,  # Same as response in Phase 1 (no modification)
-        compliance=None,  # Phase 3 will populate this
+        raw_response=result.content,
+        compliance=compliance_result,
         model=result.model,
         usage=result.usage,
     )
 
-    logger.info("Validate request processed successfully, model=%s", result.model)
+    logger.info(
+        "Validate request processed: model=%s, compliance_passed=%s, score=%.2f",
+        result.model,
+        compliance_result.passed,
+        compliance_result.score,
+    )
 
     return func.HttpResponse(
         body=response.model_dump_json(),

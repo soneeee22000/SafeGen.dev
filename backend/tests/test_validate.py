@@ -30,7 +30,7 @@ class TestValidateEndpoint:
         )
 
     def test_valid_request_returns_200(self, mock_env: None, sample_generation_result: GenerationResult) -> None:
-        """Valid request with prompt returns 200 with LLM response."""
+        """Valid request with prompt returns 200 with LLM response and compliance."""
         import functions.validate as validate_module
         from functions.validate import validate
 
@@ -39,6 +39,7 @@ class TestValidateEndpoint:
 
         # Inject mock client
         validate_module._openai_client = mock_client
+        validate_module._compliance_engine = None
 
         req = self._make_request({"prompt": "What is GDPR?"})
         resp = validate(req)
@@ -47,10 +48,15 @@ class TestValidateEndpoint:
         data = json.loads(resp.get_body())
         assert data["response"] == "This is a safe and helpful response."
         assert data["model"] == "gpt-4o"
-        assert data["compliance"] is None  # Phase 1: no compliance yet
+        # Phase 3: compliance is now populated
+        assert data["compliance"] is not None
+        assert data["compliance"]["passed"] is True
+        assert data["compliance"]["score"] >= 0.9
+        assert "pii" in data["compliance"]["layers_run"]
 
         # Cleanup
         validate_module._openai_client = None
+        validate_module._compliance_engine = None
 
     def test_invalid_json_returns_400(self) -> None:
         """Non-JSON body returns 400."""
@@ -107,6 +113,7 @@ class TestValidateEndpoint:
         assert "API timeout" in data["message"]
 
         validate_module._openai_client = None
+        validate_module._compliance_engine = None
 
     def test_request_with_context_passes_to_client(
         self, mock_env: None, sample_generation_result: GenerationResult
@@ -119,6 +126,7 @@ class TestValidateEndpoint:
         mock_client.generate.return_value = sample_generation_result
 
         validate_module._openai_client = mock_client
+        validate_module._compliance_engine = None
 
         req = self._make_request({
             "prompt": "Summarize this",
@@ -133,6 +141,7 @@ class TestValidateEndpoint:
         )
 
         validate_module._openai_client = None
+        validate_module._compliance_engine = None
 
     def test_response_includes_usage_stats(
         self, mock_env: None, sample_generation_result: GenerationResult
@@ -145,6 +154,7 @@ class TestValidateEndpoint:
         mock_client.generate.return_value = sample_generation_result
 
         validate_module._openai_client = mock_client
+        validate_module._compliance_engine = None
 
         req = self._make_request({"prompt": "test"})
         resp = validate(req)
@@ -153,3 +163,62 @@ class TestValidateEndpoint:
         assert data["usage"]["total_tokens"] == 70
 
         validate_module._openai_client = None
+        validate_module._compliance_engine = None
+
+    def test_compliance_flags_pii_in_response(self, mock_env: None) -> None:
+        """Response containing PII gets flagged by compliance engine."""
+        import functions.validate as validate_module
+        from functions.validate import validate
+
+        pii_result = GenerationResult(
+            content="Contact john.doe@realcompany.com for more details.",
+            model="gpt-4o",
+            usage={"prompt_tokens": 30, "completion_tokens": 15, "total_tokens": 45},
+            finish_reason="stop",
+        )
+        mock_client = MagicMock()
+        mock_client.generate.return_value = pii_result
+
+        validate_module._openai_client = mock_client
+        validate_module._compliance_engine = None
+
+        req = self._make_request({"prompt": "How do I contact support?"})
+        resp = validate(req)
+
+        assert resp.status_code == 200
+        data = json.loads(resp.get_body())
+        assert data["compliance"]["passed"] is False
+        assert any(f["layer"] == "pii" for f in data["compliance"]["flags"])
+
+        validate_module._openai_client = None
+        validate_module._compliance_engine = None
+
+    def test_compliance_respects_rules_category(self, mock_env: None) -> None:
+        """rules_category=pii only runs PII validator, not bias."""
+        import functions.validate as validate_module
+        from functions.validate import validate
+
+        # Response has bias ("chairman") but request only checks PII
+        bias_result = GenerationResult(
+            content="The chairman announced the new policy.",
+            model="gpt-4o",
+            usage={"prompt_tokens": 20, "completion_tokens": 10, "total_tokens": 30},
+            finish_reason="stop",
+        )
+        mock_client = MagicMock()
+        mock_client.generate.return_value = bias_result
+
+        validate_module._openai_client = mock_client
+        validate_module._compliance_engine = None
+
+        req = self._make_request({"prompt": "What happened?", "rules_category": "pii"})
+        resp = validate(req)
+
+        data = json.loads(resp.get_body())
+        assert "pii" in data["compliance"]["layers_run"]
+        assert "bias" not in data["compliance"]["layers_run"]
+        # No PII in text, so should pass even though bias exists
+        assert data["compliance"]["passed"] is True
+
+        validate_module._openai_client = None
+        validate_module._compliance_engine = None
