@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+.git
+.vscode
+__azurite_db*__.json
+local.settings.json
+*.egg-info/
