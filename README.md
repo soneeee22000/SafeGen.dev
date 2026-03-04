@@ -1,5 +1,8 @@
 # SafeGen
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-safe--gen--dev.vercel.app-blue?style=for-the-badge)](https://safe-gen-dev.vercel.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
 **Responsible AI compliance middleware for LLM applications.**
 
 SafeGen is a serverless pipeline that sits between your application and Azure OpenAI, validating every LLM response against configurable safety, bias, PII, and regulatory rules before serving to end users. Rules are loaded via RAG — update compliance policies by uploading a document, no redeployment needed.
@@ -8,6 +11,7 @@ SafeGen is a serverless pipeline that sits between your application and Azure Op
 
 - **Multi-Layer Compliance Engine** — PII detection, bias checking, safety filtering, and RAG-based rule evaluation run in sequence on every LLM response
 - **RAG-Powered Policy Retrieval** — Upload compliance documents (PDF/DOCX/MD), automatically chunked and indexed in FAISS for semantic rule matching at inference time
+- **Interactive Playground** — Type a prompt, submit it, and watch the compliance engine validate the LLM response in real-time with example prompts and category toggles
 - **Real-Time Monitoring Dashboard** — React/TypeScript SPA with KPI cards, trend charts, flag breakdowns, and paginated audit logs
 - **Full Audit Trail** — Every validation result logged with request/response payloads, compliance scores, and flag details for regulatory review
 - **Dynamic Rule Updates** — Add or modify compliance rules without redeploying; rules are retrieved via semantic search at validation time
@@ -16,8 +20,8 @@ SafeGen is a serverless pipeline that sits between your application and Azure Op
 
 ```
                     ┌─────────────────────────────────────┐
-                    │         React Dashboard              │
-                    │  Metrics  │  Audit Log  │  Rules     │
+                    │           React Dashboard                │
+                    │  Playground │ Metrics │ Audit │ Rules  │
                     └─────┬─────┴──────┬──────┴─────┬──────┘
                           │            │            │
                        GET /metrics  GET /audit  GET /rules
@@ -60,7 +64,7 @@ SafeGen is a serverless pipeline that sits between your application and Azure Op
 | **Storage**    | Azure Blob Storage (audit logs, rule documents)    |
 | **Frontend**   | React 19, TypeScript, Vite, Tailwind CSS, Recharts |
 | **UI Kit**     | shadcn/ui (Radix + Tailwind components)            |
-| **Testing**    | pytest (backend, 150 tests), vitest (frontend, 41) |
+| **Testing**    | pytest (backend, 150 tests), vitest (frontend, 53) |
 
 ## Project Structure
 
@@ -116,10 +120,12 @@ safegen/
 │       │   ├── ui/                    #   shadcn components (button, card, table, etc.)
 │       │   ├── layout/               #   Sidebar, Header, AppLayout
 │       │   ├── dashboard/            #   KpiCard, TrendChart, FlagBreakdownChart, ScoreGauge
+│       │   ├── playground/           #   PromptInput, ResultPanel, FlagList, ExamplePrompts
 │       │   ├── audit/                #   AuditFilters, AuditTable, AuditPagination, AuditDetailModal
 │       │   └── rules/                #   RuleUploader (drag-and-drop), RuleList
 │       ├── pages/
 │       │   ├── DashboardPage.tsx      #   KPI cards + charts, 60s auto-refresh
+│       │   ├── PlaygroundPage.tsx     #   Live compliance validation playground
 │       │   ├── AuditPage.tsx          #   Filterable table + detail modal
 │       │   └── RulesPage.tsx          #   Upload zone + rule card grid
 │       └── test/
@@ -231,7 +237,7 @@ docker-compose up --build
 # Backend (150 tests)
 cd backend && python -m pytest tests/ -v --tb=short
 
-# Frontend (41 tests)
+# Frontend (53 tests)
 cd frontend && npm run test:run
 ```
 
@@ -255,6 +261,8 @@ EMBEDDING_MODEL=all-MiniLM-L6-v2
 - [x] **Phase 4:** Metrics & audit — dual-backend logging, paginated retrieval, aggregated stats
 - [x] **Phase 5:** React dashboard — KPI cards, trend charts, audit log, rules management
 - [x] **Phase 6:** Docker + CI/CD — Dockerfiles, docker-compose (full stack), GitHub Actions pipeline
+- [x] **Phase 7:** Interactive Playground — Live compliance validation with example prompts and category toggles
+- [x] **Deployed** — Frontend on [Vercel](https://safe-gen-dev.vercel.app), backend on Azure Functions
 
 ## Design Decisions
 

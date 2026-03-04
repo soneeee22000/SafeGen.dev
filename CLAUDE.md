@@ -35,7 +35,7 @@ cd backend && python -c "from function_app import app; print(f'Registered {len(a
 # Dev server (proxies /api to localhost:7071)
 cd frontend && npm run dev
 
-# Tests (41 passing)
+# Tests (53 passing)
 cd frontend && npm run test:run
 
 # Production build
@@ -105,8 +105,9 @@ Both the OpenAI client (`validate.py`) and embedding model (`rag_pipeline.py`) a
 - **Phase 2** (RAG Pipeline): COMPLETE
 - **Phase 3** (Compliance Engine): COMPLETE — PII detection, bias checking, safety filtering
 - **Phase 4** (Metrics & Audit API): COMPLETE — Dual-backend audit logging, paginated audit retrieval, aggregated metrics
-- **Phase 5** (React Dashboard): COMPLETE — Vite + React 19 + TypeScript, shadcn/ui, Recharts, 3 pages, 41 tests
+- **Phase 5** (React Dashboard): COMPLETE — Vite + React 19 + TypeScript, shadcn/ui, Recharts, 3 pages
 - **Phase 6** (Docker + CI/CD): COMPLETE — Dockerfiles, docker-compose, GitHub Actions CI (backend + frontend + Docker)
+- **Phase 7** (Playground): COMPLETE — Interactive compliance validation page with example prompts, category toggles, 53 frontend tests
 
 ## Dependency Pins
 
