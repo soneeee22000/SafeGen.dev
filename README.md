@@ -11,6 +11,11 @@
 
 SafeGen is a serverless pipeline that sits between your application and Azure OpenAI, validating every LLM response against configurable safety, bias, PII, and regulatory rules before serving to end users. Rules are loaded via RAG — update compliance policies by uploading a document, no redeployment needed.
 
+
+<p align="center">
+  <img src="docs/screenshot-dashboard.png" alt="SafeGen Dashboard Screenshot" width="100%" />
+</p>
+
 ## Key Features
 
 - **Multi-Layer Compliance Engine** — PII detection, bias checking, safety filtering, and RAG-based rule evaluation run in sequence on every LLM response
